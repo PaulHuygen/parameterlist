@@ -12,7 +12,11 @@ app = Flask(__name__)
 
 lock = Lock()
 
+par_list = [ ]
+proc_list = [ ] 
+
 num = 0
+
 
 @app.route("/")
 def hello():
@@ -25,11 +29,13 @@ def hello():
 
 @app.route("/uploadparfile", methods=['GET', 'POST'])
 def upload_parfile():
+    global par_list
     ret = "NOPE"
     if request.method == 'POST':
         file = request.files['file']
-#        partext = request.files['file'].read()
-#        ret = partext
+        with lock:
+          par_list = request.files['file'].readlines()
+          ret = "{}".format(len(par_list))
         return ret        
 #        if file and allowed_file(file.filename):
 #            filename = secure_filename(file.filename)
@@ -45,6 +51,17 @@ def upload_parfile():
          <input type=submit value=Upload>
     </form>
     '''
+
+@app.route("/pop")
+def pop_par():
+    global par_list
+    with lock:
+        try:
+            par = par_list.pop()
+        except Exception as e:
+            return ""
+        return par
+
 
 
 if __name__ == "__main__":
